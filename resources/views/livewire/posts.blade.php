@@ -43,7 +43,7 @@
                                 </td>
                                 <td class="px-6 py-4 text-right text-sm">
                                     <x-jet-button wire:click="showEditPostModal({{ $post->id }})"
-                                        class="bg-green-500">Edit</x-jet-button>
+                                        class="bg-yellow-500">Edit</x-jet-button>
                                     <x-jet-button wire:click="deletePost({{ $post->id }})" class="bg-red-700">Delete
                                     </x-jet-button>
                                 </td>

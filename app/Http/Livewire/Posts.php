@@ -4,6 +4,8 @@ namespace App\Http\Livewire;
 
 use App\Models\Post;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Request;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -23,8 +25,15 @@ class Posts extends Component
 
     public $showModalForm = false;
 
+    public function banner(string $message, string $style = 'success')
+    {
+        request()->session()->flash('flash.banner', $message);
+        request()->session()->flash('flash.bannerStyle', $style);
+    }
+
     public function showCreatePostModal()
     {
+        $this->reset();
         $this->showModalForm = true;
     }
 
@@ -33,7 +42,7 @@ class Posts extends Component
         $this->validate([
             'title' => 'required',
             'body' => 'required',
-            'image' => 'requried|image|max:1024'
+            'image' => 'required|image|max:1024'
         ]);
 
         $image_name = $this->image->getClientOriginalName();
@@ -46,6 +55,9 @@ class Posts extends Component
             'slug' => Str::slug($this->title)
         ]);
         $this->reset();
+        session()->flash('flash.banner', 'Post Stored Successfully');
+        session()->flash('flash.bannerStyle', 'success');
+        return $this->redirect('/');
     }
 
     public function showEditPostModal($id)
@@ -69,11 +81,11 @@ class Posts extends Component
         $this->validate([
             'title' => 'required',
             'body' => 'required',
-            'image' => 'requried|image|max:1024|nullable'
+            'image' => 'required|image|max:1024|nullable'
         ]);
 
         if ($this->image) {
-            Storage::delete('public/photos/', $this->newImage);
+            Storage::delete('public/photos/' . $this->newImage);
             $this->newImage = $this->image->getClientOriginalName();
             $this->image->storeAs('public/photos', $this->newImage);
         }
@@ -85,10 +97,18 @@ class Posts extends Component
         ]);
     }
 
+    public function deletePost($id)
+    {
+        $post = Post::find($id);
+        Storage::delete('public/photos/' . $post->image);
+        $post->delete();
+        $this->banner('Post Deleted Successfully');
+    }
+
     public function render()
     {
         return view('livewire.posts', [
-            'posts' => Post::paginate(5)
+            'posts' => Post::orderByDesc('created_at')->paginate(5)
         ]);
     }
 }
